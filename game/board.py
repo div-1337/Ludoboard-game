@@ -35,7 +35,7 @@ class GameWindow(QMainWindow):
 
     def move_finished(self):
         config.DICE_ROLLED = 0
-        config.CURRENT_PLAYER = "red" if config.CURRENT_PLAYER == "blue" else "blue"
+        config.CURRENT_PLAYER = "green" if config.CURRENT_PLAYER == "blue" else "blue"
         print(f"Turn switched. Next player: {config.CURRENT_PLAYER}")
 
 

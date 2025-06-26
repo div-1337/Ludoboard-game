@@ -6,6 +6,7 @@ import random
 import os
 from game.sound import play_dice_sound
 
+
 class Dice:
     def __init__(self, parent):
         self.parent = parent
@@ -38,6 +39,27 @@ class Dice:
             # Optionally move a pawn automatically, or just leave to user click:
             # self.parent.pawns[0].move_to(self.final_roll)
             roll = self.final_roll
+
+            if config.CURRENT_PLAYER == "blue":
+                blue_positions = [
+                    p.current_pos for p in self.parent.pawns
+                    if p.pawn_id in (-1, -2, -3, -4)
+                ]
+                if all(pos < 0 for pos in blue_positions) and self.final_roll not in (1, 6):
+                    print("🚫 Blue has no valid moves — skipping turn.")
+                    config.switch_player_turn()
+                    return
+            elif config.CURRENT_PLAYER == "green":
+                blue_positions = [
+                    p.current_pos for p in self.parent.pawns
+                    if p.pawn_id in (-5, -6, -7, -8)
+                ]
+                if all(pos < 0 for pos in blue_positions) and self.final_roll not in (1, 6):
+                    print("🚫 Blue has no valid moves — skipping turn.")
+                    config.switch_player_turn()
+                    return
+                
+
         
         self.set_icon(roll)
         self.shuffle_count += 1

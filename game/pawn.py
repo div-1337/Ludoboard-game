@@ -34,13 +34,21 @@ class Pawn:
 
     def on_click(self):
         print(f"on_click called for pawn {self.pawn_id} with dice value {config.DICE_FINAL_VALUE}")
+        
         if config.DICE_ROLLED == 1 and not self.timer.isActive():
             allowed_ids = config.PLAYER_PAWNS[config.CURRENT_PLAYER]
+            
             if self.pawn_id in allowed_ids:
+                # Prevent invalid moves from base unless dice = 1 or 6
+                if self.current_pos < 0 and config.DICE_FINAL_VALUE not in (1, 6):
+                    print(f"❌ Invalid move: {self.pawn_id} is in base and dice is {config.DICE_FINAL_VALUE} and current turn is {config.CURRENT_PLAYER}")
+                    
+
+                    return
+                
                 print(f"Starting move for {self.pawn_id}")
                 self.move_to(config.DICE_FINAL_VALUE)
                 self.timer.start(100)
-                # Do NOT reset DICE_ROLLED or switch player here, wait until move fully finishes
             else:
                 print(f"❌ Not your turn — pawn {self.pawn_id} is inactive.")
         else:
@@ -48,10 +56,23 @@ class Pawn:
 
     def move_to(self, steps):
         print(f"move_to called with steps={steps}")
-
-        # Get all valid positions sorted
-        sorted_positions = sorted(self.coords.keys())
         
+        # Pawn in base, valid dice → move out to starting point
+        if self.current_pos < 0:
+            if config.DICE_FINAL_VALUE in (1, 6):
+                if config.CURRENT_PLAYER == "blue":
+                    self.target_pos = 0
+                elif config.CURRENT_PLAYER == "green":
+                    self.target_pos = 26
+                else:
+                    print("⚠️ Unsupported player color!")
+                    return
+                print(f"🎯 Moving from base to starting position: {self.target_pos}")
+                return
+
+        # Pawn already on board, calculate normal movement
+        sorted_positions = sorted(self.coords.keys())
+
         if self.current_pos not in sorted_positions:
             print(f"⚠️ current_pos {self.current_pos} not in coords keys")
             return
@@ -63,18 +84,33 @@ class Pawn:
             target_index = len(sorted_positions) - 1  # cap at end
         
         self.target_pos = sorted_positions[target_index]
-
-        print(f"Target set from {self.current_pos} to {self.target_pos}")
+        print(f"🎯 Target set from {self.current_pos} to {self.target_pos}")
 
 
     def step_move(self):
-        if self.current_pos < self.target_pos:
-            self.current_pos += 1
-            self.update_position()
+        if self.current_pos < 0:
+            # Pawn is in base
+            if config.DICE_FINAL_VALUE in (1, 6):
+                if config.CURRENT_PLAYER == "blue":
+                    self.current_pos = 0
+                elif config.CURRENT_PLAYER == "green":
+                    self.current_pos = 26
+                self.update_position()
+            else:
+                self.timer.stop()
+                self.parent.move_finished()
         else:
-            self.timer.stop()
-            # Notify game that move ended, so dice state resets and turn switches
-            self.parent.move_finished()
+            # Pawn is already on the board
+            if self.current_pos < self.target_pos:
+                self.current_pos += 1
+                self.update_position()
+            else:
+                self.timer.stop()
+                self.parent.move_finished()
+
+
+
+
 
 
 

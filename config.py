@@ -10,9 +10,29 @@ DICE_FINAL_VALUE = 0
 
 
 
+
+
+                
+def switch_player_turn():
+    players = list(PLAYER_PAWNS.keys())
+    current_index = players.index(CURRENT_PLAYER)
+    next_index = (current_index + 1) % len(players)
+
+    globals()['CURRENT_PLAYER'] = players[next_index]
+    globals()['DICE_ROLLED'] = 0
+    globals()['DICE_FINAL_VALUE'] = 0
+
+    print(f"🔄 Turn switched. Next player: {CURRENT_PLAYER}")
+
+
+
+
+
+
+
 PLAYER_PAWNS = {
     "blue": [-1, -2, -3, -4],
-    "red": [-5, -6, -7, -8],
+    "green": [-5, -6, -7, -8],
     # add other players if any
 }
 
