@@ -33,6 +33,13 @@ class Pawn:
         self.update_position()
 
     def on_click(self):
+
+        if config.DICE_FINAL_VALUE is None:
+            print("⚠️ Dice has not been rolled yet!")
+            return
+
+
+
         print(f"on_click called for pawn {self.pawn_id} with dice value {config.DICE_FINAL_VALUE}")
         
         if config.DICE_ROLLED == 1 and not self.timer.isActive():
@@ -62,13 +69,25 @@ class Pawn:
             if config.DICE_FINAL_VALUE in (1, 6):
                 if config.CURRENT_PLAYER == "blue":
                     self.target_pos = 0
+                elif config.CURRENT_PLAYER == "red":
+                    self.target_pos = 13
                 elif config.CURRENT_PLAYER == "green":
                     self.target_pos = 26
+                elif config.CURRENT_PLAYER == "yellow":
+                    self.target_pos = 39
                 else:
                     print("⚠️ Unsupported player color!")
                     return
                 print(f"🎯 Moving from base to starting position: {self.target_pos}")
+                self.current_pos = self.target_pos
+                self.update_position()
+                self.timer.stop()
+                self.parent.move_finished()
                 return
+            else:
+                self.timer.stop()
+                self.parent.move_finished()           
+
 
         # Pawn already on board, calculate normal movement
         sorted_positions = sorted([k for k in self.coords if k >= 0])
@@ -108,7 +127,7 @@ class Pawn:
                 self.parent.move_finished()
         else:
             # Green player wraps movement
-            if self.color == "green":
+            if self.color == "red" or self.color == "green" or self.color == "yellow":
                 if self.current_pos != self.target_pos:
                     self.current_pos = (self.current_pos + 1) % config.MAX_POSITIONS
                     self.update_position()
@@ -174,3 +193,7 @@ class Pawn:
         y = max(0, min(y, self.parent.height() - btn_height))
 
         self.button.move(x, y)
+
+
+
+   

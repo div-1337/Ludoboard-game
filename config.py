@@ -32,16 +32,25 @@ def switch_player_turn():
 
 PLAYER_PAWNS = {
     "blue": [-1, -2, -3, -4],
-    "green": [-5, -6, -7, -8],
-    # add other players if any
+    "red": [-5,-6,-7,-8],
+    "green": [-9, -10, -11, -12],
+    "yellow": [-13,-14,-15,-16]
 }
 
 PAWN_COORDINATES = {
 
-    -8: (0.13, 0.235),
-    -7: (0.13, 0.125),
-    -6: (0.25, 0.125),
-    -5: (0.25, 0.235),                    # OTHER COLOR PAWN SPAWNING PENDING, TURN EXCHANGE IN pawn.py On_Click
+    -16:(0.815, 0.235),
+    -15:(0.815, 0.125),
+    -14:(0.695, 0.125),
+    -13:(0.695, 0.235),
+    -12:(0.13, 0.235),
+    -11:(0.13, 0.125),
+    -10:(0.25, 0.125),
+    -9: (0.25, 0.235),                    # OTHER COLOR PAWN SPAWNING PENDING, TURN EXCHANGE IN pawn.py On_Click
+    -8: (0.13 , 0.82),
+    -7: (0.25 , 0.82),
+    -6: (0.25 , 0.71),
+    -5: (0.13 , 0.71),
     -4: (0.695, 0.82),
     -3: (0.815, 0.82),
     -2: (0.815, 0.71),
