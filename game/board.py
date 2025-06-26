@@ -43,9 +43,15 @@ class GameWindow(QMainWindow):
 
     def resizeEvent(self, event):
         self.set_background_image()
-        self.pawn.update_position()
+
+        for pawn in self.pawns:
+            pawn.update_position()
+
         self.dice.update_position()
+
         super().resizeEvent(event)
+
+
 
     def set_background_image(self):
         pixmap = QPixmap(config.BOARD_IMAGE)
@@ -57,20 +63,6 @@ class GameWindow(QMainWindow):
         self.label.setPixmap(scaled_pixmap)
         self.label.setGeometry(0, 0, self.width(), self.height() - 75)
 
-
-    def resizeEvent(self, event):
-    # Resize background board
-        self.set_background_image()
-
-    # Resize and reposition pawn
-        if hasattr(self, "pawn"):
-            self.pawn.update_position()
-
-        # Resize and reposition dice
-        if hasattr(self, "dice"):
-            self.dice.update_position()
-
-        super().resizeEvent(event)
 
 
 

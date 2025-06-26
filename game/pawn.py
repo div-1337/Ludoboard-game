@@ -86,7 +86,6 @@ class Pawn:
         self.target_pos = sorted_positions[target_index]
         print(f"🎯 Target set from {self.current_pos} to {self.target_pos}")
 
-
     def step_move(self):
         if self.current_pos < 0:
             # Pawn is in base
@@ -100,10 +99,13 @@ class Pawn:
                 self.timer.stop()
                 self.parent.move_finished()
         else:
-            # Pawn is already on the board
-            if self.current_pos < self.target_pos:
-                self.current_pos += 1
+            if self.current_pos != self.target_pos:
+                self.current_pos = (self.current_pos + 1) % config.MAX_POSITIONS
                 self.update_position()
+
+                if self.current_pos == self.target_pos:
+                    self.timer.stop()
+                    self.parent.move_finished()
             else:
                 self.timer.stop()
                 self.parent.move_finished()
@@ -132,18 +134,28 @@ class Pawn:
 
         rel_x, rel_y = self.coords[self.current_pos]
 
-        scale_factor = 0.05
-        pawn_width = int(bg_width * scale_factor)
-        pawn_height = int(bg_height * scale_factor)
-        self.button.resize(pawn_width, pawn_height)
+        # Calculate size of pawn relative to board size
+        scale_factor = 0.05  # 5% of board size
+        target_width = int(bg_width * scale_factor)
+        target_height = int(bg_height * scale_factor)
 
-        x = int(label.x() + rel_x * bg_width)
-        y = int(label.y() + rel_y * bg_height)
-        self.button.move(x, y)
-
+        # Load and scale pawn image keeping aspect ratio
         path = os.path.join(config.ASSETS_DIR, "Pawns", f"pawn_{self.color}.png")
         pixmap = QPixmap(path)
         if not pixmap.isNull():
-            scaled = pixmap.scaled(pawn_width, pawn_height, Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
+            scaled = pixmap.scaled(target_width, target_height, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             self.button.setIcon(QIcon(scaled))
-            self.button.setIconSize(self.button.size())
+            self.button.setIconSize(scaled.size())
+            self.button.resize(scaled.size())  # Button matches image size
+
+        # Compute final button position centered on the relative coordinates
+        btn_width = self.button.width()
+        btn_height = self.button.height()
+        x = int(label.x() + (rel_x + 0.025) * bg_width - btn_width / 2)
+        y = int(label.y() + (rel_y + 0.025) * bg_height - btn_height / 2)
+
+        # Clamp position to window bounds
+        x = max(0, min(x, self.parent.width() - btn_width))
+        y = max(0, min(y, self.parent.height() - btn_height))
+
+        self.button.move(x, y)

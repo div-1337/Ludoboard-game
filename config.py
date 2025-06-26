@@ -7,7 +7,7 @@ DICE_SOUND = os.path.join(ASSETS_DIR, "Sounds", "Dice_Rolling.mp3")
 DICE_ROLLED = 0
 CURRENT_PLAYER = "blue"
 DICE_FINAL_VALUE = 0
-
+MAX_POSITIONS = 52              # TOTAL NUMBER OF INDEXES IN LUDOBOARD, IF YOU MAKE ANY EDITS TO LUDOBOARD IMAGE, CHANGE THIS NUMBER AS WELL
 
 
 
@@ -38,14 +38,14 @@ PLAYER_PAWNS = {
 
 PAWN_COORDINATES = {
 
-    -8: (0.135, 0.235),
-    -7: (0.135, 0.125),
+    -8: (0.13, 0.235),
+    -7: (0.13, 0.125),
     -6: (0.25, 0.125),
     -5: (0.25, 0.235),                    # OTHER COLOR PAWN SPAWNING PENDING, TURN EXCHANGE IN pawn.py On_Click
-    -4: (0.7, 0.82),
+    -4: (0.695, 0.82),
     -3: (0.815, 0.82),
-    -2: (0.815, 0.7),
-    -1: (0.7, 0.7),    
+    -2: (0.815, 0.71),
+    -1: (0.695, 0.71),    
      0: (0.85, 0.54),
      1: (0.79, 0.54),
      2: (0.725, 0.54),
