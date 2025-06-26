@@ -71,7 +71,7 @@ class Pawn:
                 return
 
         # Pawn already on board, calculate normal movement
-        sorted_positions = sorted(self.coords.keys())
+        sorted_positions = sorted([k for k in self.coords if k >= 0])
 
         if self.current_pos not in sorted_positions:
             print(f"⚠️ current_pos {self.current_pos} not in coords keys")
@@ -80,15 +80,23 @@ class Pawn:
         current_index = sorted_positions.index(self.current_pos)
         target_index = current_index + steps
 
-        if target_index >= len(sorted_positions):
-            target_index = len(sorted_positions) - 1  # cap at end
+        if(config.CURRENT_PLAYER == 'green'):
+
+            target_index = target_index % config.MAX_POSITIONS
+
+
+
+        else:
+            if target_index >= len(sorted_positions):
+                target_index = len(sorted_positions) - 1  # cap at end
         
         self.target_pos = sorted_positions[target_index]
         print(f"🎯 Target set from {self.current_pos} to {self.target_pos}")
 
     def step_move(self):
+        print(f"[step_move] current_pos: {self.current_pos}, target_pos: {self.target_pos}")
+
         if self.current_pos < 0:
-            # Pawn is in base
             if config.DICE_FINAL_VALUE in (1, 6):
                 if config.CURRENT_PLAYER == "blue":
                     self.current_pos = 0
@@ -99,16 +107,23 @@ class Pawn:
                 self.timer.stop()
                 self.parent.move_finished()
         else:
-            if self.current_pos != self.target_pos:
-                self.current_pos = (self.current_pos + 1) % config.MAX_POSITIONS
-                self.update_position()
-
+            # Green player wraps movement
+            if self.color == "green":
+                if self.current_pos != self.target_pos:
+                    self.current_pos = (self.current_pos + 1) % config.MAX_POSITIONS
+                    self.update_position()
                 if self.current_pos == self.target_pos:
                     self.timer.stop()
                     self.parent.move_finished()
-            else:
-                self.timer.stop()
-                self.parent.move_finished()
+
+            # Blue player — no wrap logic
+            elif self.color == "blue":
+                if self.current_pos < self.target_pos:
+                    self.current_pos += 1
+                    self.update_position()
+                if self.current_pos == self.target_pos:
+                    self.timer.stop()
+                    self.parent.move_finished()
 
 
 
