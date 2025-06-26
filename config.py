@@ -1,5 +1,5 @@
 import os
-
+import traceback
 ASSETS_DIR = "Assets"
 DICE_FOLDER = os.path.join(ASSETS_DIR, "Dice_Outcomes")
 BOARD_IMAGE = os.path.join(ASSETS_DIR, "ludoboard.jpg")
@@ -8,49 +8,50 @@ DICE_ROLLED = 0
 CURRENT_PLAYER = "blue"
 DICE_FINAL_VALUE = 0
 MAX_POSITIONS = 52              # TOTAL NUMBER OF INDEXES IN LUDOBOARD, IF YOU MAKE ANY EDITS TO LUDOBOARD IMAGE, CHANGE THIS NUMBER AS WELL
-
+SHOULD_SWITCH_TURN = True       # New flag to control turn switching
 
 
 
                 
 def switch_player_turn():
+    traceback.print_stack()
     players = list(PLAYER_PAWNS.keys())
     current_index = players.index(CURRENT_PLAYER)
-    next_index = (current_index + 1) % len(players)
+    next_index = (current_index + 1) % len(PLAYER_ORDER)
 
-    globals()['CURRENT_PLAYER'] = players[next_index]
+    globals()['CURRENT_PLAYER'] = PLAYER_ORDER[next_index]
     globals()['DICE_ROLLED'] = 0
     globals()['DICE_FINAL_VALUE'] = 0
+    print("✅ TURN SWITCH TRIGGERED")
+    print(f"🔄 Turn switched. Now it's {CURRENT_PLAYER}'s turn")
 
-    print(f"🔄 Turn switched. Next player: {CURRENT_PLAYER}")
 
-
-
+PLAYER_ORDER = ["blue", "red", "green", "yellow"]  #ORDER OF THE TURNS
 
 
 
 
 PLAYER_PAWNS = {
     "blue": [-1, -2, -3, -4],
-    "red": [-5,-6,-7,-8],
-    "green": [-9, -10, -11, -12],
-    "yellow": [-13,-14,-15,-16]
+    "red": [-11,-12,-13,-14],
+    "green": [-21, -22, -23, -24],
+    "yellow": [-31,-32,-33,-34]
 }
 
 PAWN_COORDINATES = {
 
-    -16:(0.815, 0.235),
-    -15:(0.815, 0.125),
-    -14:(0.695, 0.125),
-    -13:(0.695, 0.235),
-    -12:(0.13, 0.235),
-    -11:(0.13, 0.125),
-    -10:(0.25, 0.125),
-    -9: (0.25, 0.235),                    # OTHER COLOR PAWN SPAWNING PENDING, TURN EXCHANGE IN pawn.py On_Click
-    -8: (0.13 , 0.82),
-    -7: (0.25 , 0.82),
-    -6: (0.25 , 0.71),
-    -5: (0.13 , 0.71),
+    -34:(0.815, 0.235),
+    -33:(0.815, 0.125),
+    -32:(0.695, 0.125),
+    -31:(0.695, 0.235),
+    -24:(0.13, 0.235),
+    -23:(0.13, 0.125),
+    -22:(0.25, 0.125),
+    -21: (0.25, 0.235),                    # OTHER COLOR PAWN SPAWNING PENDING, TURN EXCHANGE IN pawn.py On_Click
+    -14: (0.13 , 0.82),
+    -13: (0.25 , 0.82),
+    -12: (0.25 , 0.71),
+    -11: (0.13 , 0.71),
     -4: (0.695, 0.82),
     -3: (0.815, 0.82),
     -2: (0.815, 0.71),

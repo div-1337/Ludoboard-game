@@ -6,7 +6,6 @@ import random
 import os
 from game.sound import play_dice_sound
 
-
 class Dice:
     def __init__(self, parent):
         self.parent = parent
@@ -20,63 +19,67 @@ class Dice:
         self.max_shuffle = 6
         self.final_roll = None
 
-        config.DICE_ROLLED = 0
-        config.DICE_FINAL_VALUE = None  # Start unset
-
     def on_click(self):
-        if self.timer.isActive():
-            return  # prevent double click during animation
+
+
+        if config.DICE_ROLLED == 1:
+            print("⛔ Dice already rolled. Move a pawn before rolling again.")
+            return
+
         play_dice_sound()
         self.shuffle_count = 0
-        config.DICE_FINAL_VALUE = None  # Clear previous value
-        config.DICE_ROLLED = 0
+        self.button.setEnabled(False)  # Disable during roll
         self.timer.start(50)
 
     def shuffle(self):
         roll = random.randint(1, 6)
 
         if self.shuffle_count < self.max_shuffle - 1:
-            self.set_icon(roll)  # Show animation frame (not final value)
+            config.DICE_FINAL_VALUE = roll  # Interim value
+            self.set_icon(roll)
         else:
             self.final_roll = roll
             config.DICE_FINAL_VALUE = self.final_roll
             config.DICE_ROLLED = 1
             self.timer.stop()
             self.set_icon(self.final_roll)
+            self.button.setEnabled(False)  # Lock dice after roll
 
-            # Validate move eligibility
-            if config.CURRENT_PLAYER == "blue":
-                blue_positions = [p.current_pos for p in self.parent.pawns if p.pawn_id in (-1, -2, -3, -4)]
-                if all(pos < 0 for pos in blue_positions) and self.final_roll not in (1, 6):
-                    print("🚫 Blue has no valid moves — skipping turn.")
-                    config.switch_player_turn()
-                    return
+            # ✅ Turn skipping logic
+            pawn_ids = config.PLAYER_PAWNS[config.CURRENT_PLAYER]
+            movable = any(self.can_pawn_move(p) for p in self.parent.pawns if p.pawn_id in pawn_ids)
 
-            elif config.CURRENT_PLAYER == "red":
-                red_positions = [p.current_pos for p in self.parent.pawns if p.pawn_id in (-5, -6, -7, -8)]
-                if all(pos < 0 for pos in red_positions) and self.final_roll not in (1, 6):
-                    print("🚫 Red has no valid moves — skipping turn.")
-                    config.switch_player_turn()
-                    return
-
-            elif config.CURRENT_PLAYER == "green":
-                green_positions = [p.current_pos for p in self.parent.pawns if p.pawn_id in (-9, -10, -11, -12)]
-                if all(pos < 0 for pos in green_positions) and self.final_roll not in (1, 6):
-                    print("🚫 Green has no valid moves — skipping turn.")
-                    config.switch_player_turn()
-                    return
-
-            elif config.CURRENT_PLAYER == "yellow":
-                yellow_positions = [p.current_pos for p in self.parent.pawns if p.pawn_id in (-13, -14, -15, -16)]
-                if all(pos < 0 for pos in yellow_positions) and self.final_roll not in (1, 6):
-                    print("🚫 Yellow has no valid moves — skipping turn.")
-                    config.switch_player_turn()
-                    return
+            if not movable:
+                print(f"🚫 {config.CURRENT_PLAYER.capitalize()} has no valid moves — skipping turn.")
+                self.final_roll = None
+                config.DICE_ROLLED = 0
+                config.SHOULD_SWITCH_TURN = True
+                config.switch_player_turn()
+                self.button.setEnabled(True)  # Re-enable dice for next player
+                return
+            else:
+                config.SHOULD_SWITCH_TURN = True
+                print(f"🎯 {config.CURRENT_PLAYER}'s pawn can move. Turn will switch after pawn finishes.")
 
         self.shuffle_count += 1
 
+
+
+
+    def can_pawn_move(self, pawn):
+        if pawn.current_pos < 0:
+            return self.final_roll in (1, 6)  # Can only move out of base if 1 or 6
+        else:
+            return True  # Already on board → always movable
+
+
     def set_icon(self, roll):
+        if not roll:
+            print("⚠️ Dice roll is None or 0 — skipping icon update.")
+            return
         path = os.path.join(config.DICE_FOLDER, f"dice{roll}.png")
+        if not os.path.exists(path):
+            print(f"⚠️ Dice image not found: {path}")
         self.button.setIcon(QIcon(path))
         self.button.setIconSize(self.button.size())
 
