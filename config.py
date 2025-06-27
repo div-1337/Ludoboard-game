@@ -110,6 +110,7 @@ PAWN_COORDINATES = {
     51: (0.91, 0.54)
 }
 
+SAFE_ZONES = [0, 13, 26, 39]
 
 
 """

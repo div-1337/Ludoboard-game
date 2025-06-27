@@ -10,7 +10,7 @@ from game.sound import play_dice_sound
 class GameWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-
+        self.pawns = []
         self.setWindowTitle("Ludo Game")
         self.setGeometry(100, 100, 800, 600)
 
@@ -21,7 +21,7 @@ class GameWindow(QMainWindow):
 
 #        self.pawn = Pawn(self, config.PAWN_COORDINATES, start_pos=-1)
         self.dice = Dice(self)
-        self.pawns = []   # <-- add this line here BEFORE appending pawns
+          
         for color, pids in config.PLAYER_PAWNS.items():
             for pid in pids:
                 pawn = Pawn(self, config.PAWN_COORDINATES, pawn_id=pid, color=color)
@@ -37,6 +37,10 @@ class GameWindow(QMainWindow):
         config.DICE_ROLLED = 0
         config.CURRENT_PLAYER = "green" if config.CURRENT_PLAYER == "blue" else "blue"
         print(f"Turn switched. Next player: {config.CURRENT_PLAYER}")
+
+
+    def is_safe_zone(self, pos):
+        return pos in config.SAFE_ZONES
 
 
 

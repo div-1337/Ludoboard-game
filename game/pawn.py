@@ -55,19 +55,12 @@ class Pawn:
     def move_to(self, steps):
         print(f"move_to called with steps={steps}")
 
+        # 🚀 First roll-out from base
         if self.current_pos < 0 and config.DICE_FINAL_VALUE in (1, 6):
-            if config.CURRENT_PLAYER == "blue":
-                self.target_pos = 0
-            elif config.CURRENT_PLAYER == "red":
-                self.target_pos = 13
-            elif config.CURRENT_PLAYER == "green":
-                self.target_pos = 26
-            elif config.CURRENT_PLAYER == "yellow":
-                self.target_pos = 39
-            else:
-                print("⚠️ Unsupported player color!")
-                return
-
+            start_positions = {
+                "blue": 0, "red": 13, "green": 26, "yellow": 39
+            }
+            self.target_pos = start_positions.get(config.CURRENT_PLAYER)
             print(f"🎯 Moving from base to starting position: {self.target_pos}")
             self.current_pos = self.target_pos
             self.update_position()
@@ -79,8 +72,7 @@ class Pawn:
                 config.switch_player_turn()
             return
 
-        sorted_positions = sorted([k for k in self.coords if k >= 0])
-
+        sorted_positions = sorted(k for k in self.coords if k >= 0)
         if self.current_pos not in sorted_positions:
             print(f"⚠️ current_pos {self.current_pos} not in coords keys")
             return
@@ -88,14 +80,18 @@ class Pawn:
         current_index = sorted_positions.index(self.current_pos)
         target_index = current_index + steps
 
-        if config.CURRENT_PLAYER == 'green':
-            target_index = target_index % config.MAX_POSITIONS
+        # 🔄 Wrap-around for GREEN, RED, YELLOW
+        if config.CURRENT_PLAYER in ('green', 'red', 'yellow'):
+            target_index %= len(sorted_positions)  # wrap using modulo :contentReference[oaicite:1]{index=1}
+            self.target_pos = sorted_positions[target_index]
         else:
+            # 🔹 BLUE: cap at end (until we implement its safe path beyond 50)
             if target_index >= len(sorted_positions):
                 target_index = len(sorted_positions) - 1
+            self.target_pos = sorted_positions[target_index]
 
-        self.target_pos = sorted_positions[target_index]
         print(f"🎯 Target set from {self.current_pos} to {self.target_pos}")
+
 
     def step_move(self):
         print(f"[step_move] current_pos: {self.current_pos}, target_pos: {self.target_pos}")
@@ -116,7 +112,8 @@ class Pawn:
                     config.SHOULD_SWITCH_TURN = False
                     print(f"🧠 Requesting turn switch from pawn {self.pawn_id} of color {self.color}")
                     config.switch_player_turn()
-                self.parent.dice.button.setEnabled(True)  # ✅ Re-enable dice
+                self.check_collision()
+                self.parent.dice.button.setEnabled(True)  # Re-enable dice
                     
         else:
             if self.current_pos < self.target_pos:
@@ -129,6 +126,7 @@ class Pawn:
                 if config.SHOULD_SWITCH_TURN:
                     config.SHOULD_SWITCH_TURN = False
                     config.switch_player_turn()
+                self.check_collision()
                 self.parent.dice.button.setEnabled(True)  # Re-enable dice for next player
 
     def load_image(self):
@@ -170,3 +168,25 @@ class Pawn:
         y = max(0, min(y, self.parent.height() - btn_height))
 
         self.button.move(x, y)
+
+
+
+    def check_collision(self):
+        for pawn in self.parent.pawns:
+            if pawn is self:
+                continue
+            if pawn.current_pos == self.current_pos and pawn.color != self.color:
+                if not self.parent.is_safe_zone(self.current_pos):
+                    self.cut_pawn(pawn)
+                    break
+
+
+    def cut_pawn(self, pawn):
+        print(f"✂️ {self.color} pawn cut {pawn.color} pawn at {self.current_pos}")
+        pawn.current_pos = pawn.pawn_id
+        pawn.update_position()
+        # award extra turn:
+        config.SHOULD_SWITCH_TURN = False
+
+
+
