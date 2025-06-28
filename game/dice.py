@@ -8,6 +8,7 @@ from game.sound import play_dice_sound
 
 class Dice:
     def __init__(self, parent):
+        
         self.parent = parent
         self.button = QPushButton(parent)
         self.button.resize(75, 75)
@@ -18,60 +19,97 @@ class Dice:
         self.shuffle_count = 0
         self.max_shuffle = 6
         self.final_roll = None
+        
 
     def on_click(self):
-
-
         if config.DICE_ROLLED == 1:
             print("⛔ Dice already rolled. Move a pawn before rolling again.")
             return
 
         play_dice_sound()
         self.shuffle_count = 0
-        self.button.setEnabled(False)  # Disable during roll
+        self.final_roll = None
+        config.DICE_FINAL_VALUE = None
+        self.button.setEnabled(False)
         self.timer.start(50)
 
     def shuffle(self):
-        roll = random.randint(1, 6)
+        roll = 4 # random.randint(1, 6)
 
         if self.shuffle_count < self.max_shuffle - 1:
-            config.DICE_FINAL_VALUE = roll  # Interim value
+            config.DICE_FINAL_VALUE = roll
             self.set_icon(roll)
         else:
             self.final_roll = roll
-            config.DICE_FINAL_VALUE = self.final_roll
+            config.DICE_FINAL_VALUE = roll
             config.DICE_ROLLED = 1
             self.timer.stop()
-            self.set_icon(self.final_roll)
-            self.button.setEnabled(False)  # Lock dice after roll
+            self.set_icon(roll)
 
-            # ✅ Turn skipping logic
-            pawn_ids = config.PLAYER_PAWNS[config.CURRENT_PLAYER]
-            movable = any(self.can_pawn_move(p) for p in self.parent.pawns if p.pawn_id in pawn_ids)
+            print(f"🎲 Final roll = {roll} for {config.CURRENT_PLAYER}")
 
-            if not movable:
+            # ✅ Check for valid moves AFTER roll completes
+            if not self.has_valid_move():
                 print(f"🚫 {config.CURRENT_PLAYER.capitalize()} has no valid moves — skipping turn.")
-                self.final_roll = None
+                config.DICE_FINAL_VALUE = None
                 config.DICE_ROLLED = 0
                 config.SHOULD_SWITCH_TURN = True
-                config.switch_player_turn()
-                self.button.setEnabled(True)  # Re-enable dice for next player
-                return
+                config.switch_player_turn(callback=self.parent.on_turn_switch)
+                self.button.setEnabled(True)
             else:
-                config.SHOULD_SWITCH_TURN = True
-                print(f"🎯 {config.CURRENT_PLAYER}'s pawn can move. Turn will switch after pawn finishes.")
+                # 🎯 Player has valid move — wait for pawn click
+                self.button.setEnabled(False)
 
         self.shuffle_count += 1
 
 
-
+    def has_valid_move(self):
+        pawn_ids = config.PLAYER_PAWNS[config.CURRENT_PLAYER]
+        for pawn in self.parent.pawns:
+            if pawn.pawn_id in pawn_ids and self.can_pawn_move(pawn):
+                return True
+        return False
 
     def can_pawn_move(self, pawn):
-        if pawn.current_pos < 0:
-            return self.final_roll in (1, 6)  # Can only move out of base if 1 or 6
-        else:
-            return True  # Already on board → always movable
+            if config.DICE_FINAL_VALUE is None:
+                return False
 
+            if pawn.pawn_id not in config.PLAYER_PAWNS[config.CURRENT_PLAYER]:
+                return False
+
+            pos = pawn.current_pos
+            dice_value = config.DICE_FINAL_VALUE
+
+            if pos < 0:
+                return dice_value in (1, 6)
+
+            finish_paths = {
+                "blue": config.BLUE_FINISH,
+                "red": config.RED_FINISH,
+                "green": config.GREEN_FINISH,
+                "yellow": config.YELLOW_FINISH
+            }
+            finish_path = finish_paths[config.CURRENT_PLAYER]
+
+            if pos in finish_path:
+                idx = finish_path.index(pos)
+                return idx + dice_value < len(finish_path)
+
+            # ✅ Check entry into finish path
+            entry_index = config.ENTRY_INDEX[config.CURRENT_PLAYER]
+            sorted_positions = sorted(k for k in config.PAWN_COORDINATES if k >= 0)
+            if pos not in sorted_positions:
+                return False
+
+            current_index = sorted_positions.index(pos)
+            target_index = current_index + dice_value
+
+            # Check entry into finish path
+            if current_index < entry_index <= target_index:
+                offset = target_index - (entry_index + 1)
+                return offset < len(finish_path)
+
+            return True
 
     def set_icon(self, roll):
         if not roll:
