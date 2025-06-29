@@ -34,7 +34,7 @@ class Dice:
         self.timer.start(50)
 
     def shuffle(self):
-        roll = 4 # random.randint(1, 6)
+        roll = # random.randint(1, 6)
 
         if self.shuffle_count < self.max_shuffle - 1:
             config.DICE_FINAL_VALUE = roll
